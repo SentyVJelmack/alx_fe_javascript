@@ -10,9 +10,9 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
 // DOM references
 const quoteDisplay = document.getElementById("quoteDisplay");
 const newQuoteBtn = document.getElementById("newQuote");
-const exportBtn = document.getElementById("exportQuotes");
-const importFile = document.getElementById("importFile");
 const categoryFilter = document.getElementById("categoryFilter");
+const importFile = document.getElementById("importFile");
+const exportBtn = document.getElementById("exportQuotes");
 
 // ------------------------------
 // Save & Load
@@ -78,7 +78,6 @@ function addQuote() {
   saveQuotes();
   populateCategories();
 
-  // Post new quote to server (mock)
   postQuoteToServer(newQuote);
 
   document.getElementById("newQuoteText").value = "";
@@ -150,3 +149,41 @@ function importFromJsonFile(event) {
       }
     } catch {
       alert("Error parsing JSON file.");
+    }
+  };
+  fileReader.readAsText(event.target.files[0]);
+}
+
+// ------------------------------
+// Server Sync & Conflict Resolution
+// ------------------------------
+async function fetchQuotesFromServer() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+  const serverData = await response.json();
+  return serverData.map(post => ({ text: post.title, category: "Server" }));
+}
+
+async function syncQuotes() {
+  const serverQuotes = await fetchQuotesFromServer();
+  const localSet = new Set(quotes.map(q => q.text));
+  let conflictsResolved = 0;
+
+  serverQuotes.forEach(sq => {
+    if (!localSet.has(sq.text)) {
+      quotes.push(sq);
+      conflictsResolved++;
+    }
+  });
+
+  if (conflictsResolved > 0) {
+    saveQuotes();
+    populateCategories();
+    alert(`${conflictsResolved} new quote(s) synced from server.`);
+  }
+}
+
+// Post new quote to server
+async function postQuoteToServer(quote) {
+  await fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
