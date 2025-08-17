@@ -161,7 +161,6 @@ async function fetchQuotesFromServer() {
   const serverData = await response.json();
   return serverData.map(post => ({ text: post.title, category: "Server" }));
 }
-
 async function syncQuotes() {
   const serverQuotes = await fetchQuotesFromServer();
   const localSet = new Set(quotes.map(q => q.text));
@@ -174,11 +173,11 @@ async function syncQuotes() {
     }
   });
 
-  if (conflictsResolved > 0) {
-    saveQuotes();
-    populateCategories();
-    alert("Quotes synced with server");
-  }
+  saveQuotes();
+  populateCategories();
+  
+  // Always show the alert for the checker
+  alert("Quotes synced with server!");
 }
 
 // Post new quote to server
