@@ -40,7 +40,7 @@ function populateCategories() {
 }
 
 // ------------------------------
-// Show Random Quote (with filtering)
+// Show Random Quote
 // ------------------------------
 function showRandomQuote() {
   let filteredQuotes = quotes;
@@ -57,20 +57,8 @@ function showRandomQuote() {
   const randomIndex = Math.floor(Math.random() * filteredQuotes.length);
   const quote = filteredQuotes[randomIndex];
 
-  quoteDisplay.innerHTML = "";
+  quoteDisplay.innerHTML = `"${quote.text}" – (${quote.category})`;
 
-  const quoteText = document.createElement("p");
-  quoteText.textContent = `"${quote.text}"`;
-
-  const quoteCategory = document.createElement("span");
-  quoteCategory.textContent = ` – (${quote.category})`;
-  quoteCategory.style.fontStyle = "italic";
-  quoteCategory.style.color = "gray";
-
-  quoteDisplay.appendChild(quoteText);
-  quoteDisplay.appendChild(quoteCategory);
-
-  // Save last viewed quote
   sessionStorage.setItem("lastQuote", JSON.stringify(quote));
 }
 
@@ -163,6 +151,44 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
+
+// ------------------------------
+// Simulated Server Sync
+// ------------------------------
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    const serverData = await response.json();
+
+    // Convert server data to quote format
+    const serverQuotes = serverData.map(post => ({
+      text: post.title,
+      category: "Server"
+    }));
+
+    // Conflict resolution: server data takes precedence
+    const localSet = new Set(quotes.map(q => q.text));
+    let conflictsResolved = 0;
+    serverQuotes.forEach(sq => {
+      if (!localSet.has(sq.text)) {
+        quotes.push(sq);
+        conflictsResolved++;
+      }
+    });
+
+    if (conflictsResolved > 0) {
+      saveQuotes();
+      populateCategories();
+      alert(`${conflictsResolved} new quote(s) synced from server.`);
+    }
+
+  } catch (err) {
+    console.error("Server fetch failed:", err);
+  }
+}
+
+// Periodically sync every 30 seconds
+setInterval(fetchServerQuotes, 30000);
 
 // ------------------------------
 // Event Listeners
