@@ -153,7 +153,6 @@ function importFromJsonFile(event) {
   };
   fileReader.readAsText(event.target.files[0]);
 }
-
 // ------------------------------
 // Server Sync & Conflict Resolution
 // ------------------------------
@@ -187,3 +186,11 @@ async function postQuoteToServer(quote) {
   await fetch("https://jsonplaceholder.typicode.com/posts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(quote)
+  });
+}
+
+// ------------------------------
+// Periodic Sync (GLOBAL SCOPE)
+// ------------------------------
+window.setInterval(syncQuotes, 30000); // <- Put this line here
