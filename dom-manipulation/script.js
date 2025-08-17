@@ -177,7 +177,7 @@ async function syncQuotes() {
   if (conflictsResolved > 0) {
     saveQuotes();
     populateCategories();
-    alert(`${conflictsResolved} new quote(s) synced from server.`);
+    alert("Quotes synced with server");
   }
 }
 
